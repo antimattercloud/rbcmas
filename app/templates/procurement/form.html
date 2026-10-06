@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block page_title %}New Purchase Request{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px;">
+  <form method="post" action="/procurement/new" class="form-grid single">
+    <div class="field">
+      <label>Chemical <span class="req">*</span></label>
+      <select name="chemical_id" id="chemical-select" required onchange="window.location='/procurement/new?chemical_id='+this.value">
+        <option value="">Select a chemical...</option>
+        {% for chem in chemicals %}<option value="{{ chem.id }}" {{ "selected" if chemical and chemical.id == chem.id }}>{{ chem.name }} ({{ chem.chemical_code }})</option>{% endfor %}
+      </select>
+    </div>
+
+    {% if suggestion %}
+    <div class="alert alert-info">
+      <strong>System suggestion (not a purchase - approval required):</strong><br>
+      Avg monthly consumption: {{ suggestion.avg_monthly_consumption }} {{ chemical.unit }} &bull;
+      3-month forecast: {{ suggestion.forecast_3_month }} {{ chemical.unit }} &bull;
+      Current stock: {{ suggestion.current_stock }} {{ chemical.unit }} &bull;
+      Safety stock: {{ suggestion.safety_stock }} {{ chemical.unit }}<br>
+      <strong>Suggested purchase quantity: {{ suggestion.suggested_quantity }} {{ chemical.unit }}</strong>
+    </div>
+    {% endif %}
+
+    <div class="field"><label>Quantity <span class="req">*</span></label><input type="number" step="any" min="0.001" name="quantity" value="{{ suggestion.suggested_quantity if suggestion else '' }}" required></div>
+    <div class="field"><label>Unit <span class="req">*</span></label>
+      <select name="unit" required>
+        {% for u in ["mL","L","g","kg","mg"] %}<option value="{{ u }}" {{ "selected" if chemical and chemical.unit == u }}>{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>Supplier</label>
+      <select name="supplier_id">
+        <option value="">(unspecified)</option>
+        {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>Reason</label><textarea name="reason" placeholder="e.g. Approaching reorder level, upcoming project need"></textarea></div>
+    <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">Submit Request</button>
+      <a href="/procurement" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ settings.app_short_name }}{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+{% if user %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">{{ settings.app_short_name }}</div>
+      <div class="brand-sub">Chemical Inventory &bull; Accountability &bull; Analytics</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="{{ 'active' if nav_active == 'dashboard' }}"><span class="sidebar-icon">&#9632;</span> Dashboard</a>
+
+      <div class="sidebar-section-label">Inventory</div>
+      <a href="/chemicals" class="{{ 'active' if nav_active == 'chemicals' }}"><span class="sidebar-icon">&#9711;</span> Chemicals</a>
+      <a href="/containers" class="{{ 'active' if nav_active == 'containers' }}"><span class="sidebar-icon">&#9633;</span> Containers</a>
+      <a href="/laboratories" class="{{ 'active' if nav_active == 'laboratories' }}"><span class="sidebar-icon">&#9737;</span> Laboratories</a>
+      <a href="/locations" class="{{ 'active' if nav_active == 'locations' }}"><span class="sidebar-icon">&#9776;</span> Locations</a>
+
+      <div class="sidebar-section-label">Operations</div>
+      <a href="/usage" class="{{ 'active' if nav_active == 'usage' }}"><span class="sidebar-icon">&#10148;</span> Usage</a>
+      <a href="/transfers" class="{{ 'active' if nav_active == 'transfers' }}"><span class="sidebar-icon">&#8644;</span> Transfers</a>
+      <a href="/verification" class="{{ 'active' if nav_active == 'verification' }}"><span class="sidebar-icon">&#10003;</span> Physical Verification</a>
+      <a href="/procurement" class="{{ 'active' if nav_active == 'procurement' }}"><span class="sidebar-icon">&#128722;</span> Procurement</a>
+
+      <div class="sidebar-section-label">Insight</div>
+      <a href="/analytics" class="{{ 'active' if nav_active == 'analytics' }}"><span class="sidebar-icon">&#128200;</span> Analytics</a>
+      <a href="/reports" class="{{ 'active' if nav_active == 'reports' }}"><span class="sidebar-icon">&#128196;</span> Reports</a>
+      <a href="/audit" class="{{ 'active' if nav_active == 'audit' }}"><span class="sidebar-icon">&#128269;</span> Audit Log</a>
+      <a href="/data-io" class="{{ 'active' if nav_active == 'data_io' }}"><span class="sidebar-icon">&#8645;</span> Data Import/Export</a>
+
+      {% if user.is_admin %}
+      <div class="sidebar-section-label">System</div>
+      <a href="/admin/users" class="{{ 'active' if nav_active == 'admin' }}"><span class="sidebar-icon">&#9881;</span> Administration</a>
+      {% endif %}
+    </nav>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <button data-sidebar-toggle class="btn btn-secondary btn-sm" style="display:none" aria-label="Toggle menu">&#9776;</button>
+      <div class="page-title">{% block page_title %}{% endblock %}</div>
+      <form class="smart-search" action="/search" method="get">
+        <input type="search" name="q" placeholder="Search: methanol, Lab 204, expiring this month..." value="{{ request.query_params.get('q','') }}">
+      </form>
+      <div class="user-chip">
+        <span>{{ user.full_name }}</span>
+        <span class="role-badge">{{ user.role.replace('_',' ') }}</span>
+        <form method="post" action="/logout" style="display:inline">
+          <button type="submit" class="btn btn-secondary btn-sm">Log out</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="main-content">
+      {% if flash_messages %}
+        {% for category, msg in flash_messages %}
+        <div class="alert alert-{{ category }}" data-flash>{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      {{ settings.footer_text }} &middot; {{ settings.app_name }}
+    </footer>
+  </div>
+</div>
+{% else %}
+  {% block guest_content %}{% endblock %}
+{% endif %}
+<script src="/static/js/app.js"></script>
+</body>
+</html>

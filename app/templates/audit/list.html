@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block page_title %}Audit Log{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <form method="get" data-live-filter-form>
+      <select name="action">
+        <option value="">All actions</option>
+        {% for a in actions %}<option value="{{ a }}" {{ "selected" if a == action }}>{{ a }}</option>{% endfor %}
+      </select>
+      <select name="entity_type">
+        <option value="">All entity types</option>
+        {% for e in entity_types %}<option value="{{ e }}" {{ "selected" if e == entity_type }}>{{ e }}</option>{% endfor %}
+      </select>
+    </form>
+    <a href="/reports/audit/export.csv" class="btn btn-secondary btn-sm">Export CSV</a>
+  </div>
+  <table>
+    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th><th>Description</th></tr></thead>
+    <tbody>
+      {% for a in page_obj.items %}
+      <tr>
+        <td>{{ a.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ a.user.full_name if a.user else "System" }}</td>
+        <td><span class="pill">{{ a.action.replace('_',' ') }}</span></td>
+        <td>{{ a.entity_type }}{% if a.entity_id %} #{{ a.entity_id }}{% endif %}</td>
+        <td>{{ a.description }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5"><div class="empty-state">No audit entries yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block page_title %}Laboratories{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <form method="get" data-live-filter-form>
+      <input type="search" name="q" placeholder="Search laboratories..." value="{{ q }}">
+    </form>
+    {% if user.is_admin %}<a href="/laboratories/new" class="btn btn-primary">+ Add Laboratory</a>{% endif %}
+  </div>
+  <table>
+    <thead><tr><th>Code</th><th>Name</th><th>Building</th><th>Floor</th><th>Manager</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for lab in page_obj.items %}
+      <tr onclick="location.href='/laboratories/{{ lab.id }}'" style="cursor:pointer">
+        <td><strong>{{ lab.code }}</strong>{% if lab.is_demo %}<span class="demo-tag">DEMO</span>{% endif %}</td>
+        <td>{{ lab.name }}</td>
+        <td>{{ lab.building }}</td>
+        <td>{{ lab.floor or "-" }}</td>
+        <td>{{ lab.manager.full_name if lab.manager else "-" }}</td>
+        <td>{% if lab.is_active %}<span class="badge badge-AVAILABLE">Active</span>{% else %}<span class="badge badge-ARCHIVED">Inactive</span>{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state"><h3>No laboratories found</h3><p>Add your first laboratory or import via CSV.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

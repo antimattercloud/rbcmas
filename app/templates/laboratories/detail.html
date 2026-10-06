@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block page_title %}{{ lab.name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/laboratories">Laboratories</a> / {{ lab.name }}</div>
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+  <div>
+    <h2 style="margin:0 0 4px;">{{ lab.name }} <span class="pill">{{ lab.code }}</span></h2>
+    <div style="color:var(--color-text-muted); font-size:13px;">{{ lab.building }}{% if lab.floor %} &bull; {{ lab.floor }}{% endif %}</div>
+  </div>
+  {% if user.is_admin %}<a href="/laboratories/{{ lab.id }}/edit" class="btn btn-secondary">Edit</a>{% endif %}
+</div>
+
+<div class="metric-grid">
+  <div class="metric-card"><div class="metric-label">Containers</div><div class="metric-value">{{ total_containers }}</div></div>
+  <div class="metric-card"><div class="metric-label">Total Quantity</div><div class="metric-value">{{ "%.1f"|format(total_quantity) }}</div></div>
+  <div class="metric-card warn"><div class="metric-label">Low Stock</div><div class="metric-value">{{ low_stock }}</div></div>
+  <div class="metric-card warn"><div class="metric-label">Expiring Soon</div><div class="metric-value">{{ expiring }}</div></div>
+  <div class="metric-card danger"><div class="metric-label">Expired</div><div class="metric-value">{{ expired }}</div></div>
+  <div class="metric-card"><div class="metric-label">30-Day Consumption</div><div class="metric-value">{{ "%.1f"|format(monthly_consumption) }}</div></div>
+</div>
+
+<div class="section-title">Containers in this Laboratory</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Container</th><th>Chemical</th><th>Quantity</th><th>Location</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for c in containers %}
+      <tr onclick="location.href='/containers/{{ c.id }}'" style="cursor:pointer">
+        <td>{{ c.container_code }}</td>
+        <td>{{ c.chemical.name }}</td>
+        <td>{{ "%.2f"|format(c.expected_quantity) }} {{ c.unit }}</td>
+        <td>{{ c.location.full_path if c.location else "-" }}</td>
+        <td><span class="badge badge-{{ c.status }}">{{ c.status.replace('_',' ') }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5"><div class="empty-state">No containers assigned to this laboratory yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title">Recent Activity</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      {% for a in recent_activity %}
+      <tr><td>{{ a.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td><td><span class="pill">{{ a.action.replace('_',' ') }}</span></td><td>{{ a.description }}</td></tr>
+      {% else %}
+      <tr><td colspan="3"><div class="empty-state">No recent activity.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

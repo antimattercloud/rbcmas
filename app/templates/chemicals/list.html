@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block page_title %}Chemicals{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <form method="get" data-live-filter-form>
+      <input type="search" name="q" placeholder="Search name, code, CAS..." value="{{ q }}">
+      <select name="category">
+        <option value="">All categories</option>
+        {% for c in categories %}<option value="{{ c }}" {{ "selected" if c == category }}>{{ c }}</option>{% endfor %}
+      </select>
+    </form>
+    {% if user.role in ["ADMIN","LAB_MANAGER"] %}<a href="/chemicals/new" class="btn btn-primary">+ Add Chemical</a>{% endif %}
+  </div>
+  <table>
+    <thead><tr><th>Code</th><th>Name</th><th>CAS</th><th>Category</th><th>Available Stock</th><th></th></tr></thead>
+    <tbody>
+      {% for chem in page_obj.items %}
+      <tr onclick="location.href='/chemicals/{{ chem.id }}'" style="cursor:pointer">
+        <td>{{ chem.chemical_code }}{% if chem.is_demo %}<span class="demo-tag">DEMO</span>{% endif %}</td>
+        <td>{{ chem.name }}</td>
+        <td>{{ chem.cas_number or "-" }}</td>
+        <td>{{ chem.category or "-" }}</td>
+        <td>{{ "%.2f"|format(stock[chem.id].total_available) }} {{ chem.unit }}</td>
+        <td>
+          {% if stock[chem.id].is_below_min %}<span class="badge badge-EXPIRED">Below Min</span>
+          {% elif stock[chem.id].is_low %}<span class="badge badge-LOW_STOCK">Low Stock</span>
+          {% else %}<span class="badge badge-AVAILABLE">OK</span>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state"><h3>No chemicals found</h3><p>Add your first chemical or import inventory using CSV.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

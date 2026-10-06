@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block page_title %}Administration &middot; Suppliers{% endblock %}
+{% block content %}
+{% include "admin/_tabs.html" %}
+<div class="grid-2">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th></tr></thead>
+      <tbody>
+        {% for s in suppliers %}
+        <tr><td>{{ s.name }}</td><td>{{ s.contact_name or "-" }}</td><td>{{ s.email or "-" }}</td><td>{{ s.phone or "-" }}</td></tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state">No suppliers yet.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Add Supplier</div>
+    <form method="post" action="/admin/suppliers" class="form-grid single">
+      <div class="field"><label>Name <span class="req">*</span></label><input name="name" required></div>
+      <div class="field"><label>Contact name</label><input name="contact_name"></div>
+      <div class="field"><label>Email</label><input type="email" name="email"></div>
+      <div class="field"><label>Phone</label><input name="phone"></div>
+      <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary">Add Supplier</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

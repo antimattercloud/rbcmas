@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block page_title %}Transfers{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <form method="get" data-live-filter-form>
+      <select name="status">
+        <option value="">All statuses</option>
+        {% for s in ["PENDING","COMPLETED","REJECTED","CANCELLED"] %}<option value="{{ s }}" {{ "selected" if s == status }}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+    <a href="/transfers/new" class="btn btn-primary">+ Request Transfer</a>
+  </div>
+  <table>
+    <thead><tr><th>Transfer</th><th>Container</th><th>Quantity</th><th>From</th><th>To</th><th>Status</th><th>Requested</th><th></th></tr></thead>
+    <tbody>
+      {% for t in page_obj.items %}
+      <tr>
+        <td>{{ t.transfer_code }}</td>
+        <td><a href="/containers/{{ t.container_id }}">{{ t.container.container_code }}</a></td>
+        <td>{{ "%.2f"|format(t.quantity) }} {{ t.unit }}</td>
+        <td>{{ t.source_laboratory.name }}</td>
+        <td>{{ t.destination_laboratory.name }}</td>
+        <td><span class="badge badge-{{ t.status }}">{{ t.status }}</span></td>
+        <td>{{ t.requested_at.strftime("%Y-%m-%d") }}</td>
+        <td style="display:flex; gap:6px;">
+          {% if t.status == "PENDING" %}
+          <form method="post" action="/transfers/{{ t.id }}/complete" data-confirm="Confirm receipt of this transfer at the destination laboratory?"><button class="btn btn-sm btn-primary" type="submit">Complete</button></form>
+          <form method="post" action="/transfers/{{ t.id }}/reject" data-confirm="Reject this transfer request?"><button class="btn btn-sm btn-danger" type="submit">Reject</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty-state"><h3>No transfers yet</h3><p>Request a transfer from a container's page or the button above.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+<div class="metric-grid" style="grid-template-columns: repeat(3, 1fr);">
+  {% for key, title in report_defs.items() %}
+  <a href="/reports/{{ key }}" class="card" style="text-decoration:none; color:inherit;">
+    <div style="font-weight:700; font-size:14px;">{{ title }}</div>
+    <div style="color:var(--color-text-muted); font-size:12px; margin-top:4px;">View, export as CSV/XLSX, or print</div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block page_title %}{{ container.container_code }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/containers">Containers</a> / {{ container.container_code }}</div>
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+  <div>
+    <h2 style="margin:0 0 4px;">{{ container.container_code }} <span class="badge badge-{{ container.status }}">{{ container.status.replace('_',' ') }}</span></h2>
+    <div style="color:var(--color-text-muted); font-size:13px;">
+      <a href="/chemicals/{{ container.chemical_id }}">{{ container.chemical.name }}</a> &bull; {{ container.batch_lot or "No batch/lot" }}
+    </div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    {% if user.role in ["ADMIN","LAB_MANAGER","RESEARCHER"] %}
+    <a href="/usage/new?container_id={{ container.id }}" class="btn btn-primary">Record Usage</a>
+    <a href="/verification/new?container_id={{ container.id }}" class="btn btn-secondary">Verify Physically</a>
+    <a href="/transfers/new?container_id={{ container.id }}" class="btn btn-secondary">Transfer</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Identity &amp; Location</div>
+    <div class="kv-grid">
+      <div class="kv-item"><div class="kv-label">Chemical</div><div class="kv-value">{{ container.chemical.name }}</div></div>
+      <div class="kv-item"><div class="kv-label">Container Size</div><div class="kv-value">{{ container.container_size }} {{ container.unit }}</div></div>
+      <div class="kv-item"><div class="kv-label">Laboratory</div><div class="kv-value"><a href="/laboratories/{{ container.laboratory_id }}">{{ container.laboratory.name }}</a></div></div>
+      <div class="kv-item"><div class="kv-label">Storage Location</div><div class="kv-value">{{ container.location.full_path if container.location else "-" }}</div></div>
+      <div class="kv-item"><div class="kv-label">Responsible Person</div><div class="kv-value">{{ container.responsible_user.full_name if container.responsible_user else "-" }}</div></div>
+      <div class="kv-item"><div class="kv-label">Date Received</div><div class="kv-value">{{ container.date_received }}</div></div>
+      <div class="kv-item"><div class="kv-label">Date Opened</div><div class="kv-value">{{ container.date_opened or "-" }}</div></div>
+      <div class="kv-item"><div class="kv-label">Expiry Date</div><div class="kv-value">{{ container.expiry_date or "-" }}</div></div>
+    </div>
+    {% if container.notes %}<div style="margin-top:12px;"><div class="kv-label">Notes</div><div class="kv-value">{{ container.notes }}</div></div>{% endif %}
+
+    {% if user.is_admin %}
+    <form method="post" action="/containers/{{ container.id }}/status" style="margin-top:16px; display:flex; gap:8px; align-items:center;">
+      <label style="margin:0;">Manual status override</label>
+      <select name="status">
+        {% for s in ["AVAILABLE","LOW_STOCK","EXPIRING_SOON","EXPIRED","EMPTY","UNDER_REVIEW","ARCHIVED"] %}
+        <option value="{{ s }}" {{ "selected" if container.status == s }}>{{ s.replace('_',' ') }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm btn-secondary" type="submit">Update</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Balance Sheet</div>
+    <div class="kv-grid">
+      <div class="kv-item"><div class="kv-label">Opening Stock</div><div class="kv-value">{{ "%.2f"|format(balance.opening) }}</div></div>
+      <div class="kv-item"><div class="kv-label">Received</div><div class="kv-value">+{{ "%.2f"|format(balance.received) }}</div></div>
+      <div class="kv-item"><div class="kv-label">Transfer In</div><div class="kv-value">+{{ "%.2f"|format(balance.transfer_in) }}</div></div>
+      <div class="kv-item"><div class="kv-label">Consumption</div><div class="kv-value">-{{ "%.2f"|format(balance.used) }}</div></div>
+      <div class="kv-item"><div class="kv-label">Transfer Out</div><div class="kv-value">-{{ "%.2f"|format(balance.transfer_out) }}</div></div>
+      <div class="kv-item"><div class="kv-label">Approved Adjustment</div><div class="kv-value">{{ "%+.2f"|format(balance.adjustment) }}</div></div>
+    </div>
+    <hr style="margin:14px 0; border:none; border-top:1px solid var(--color-border);">
+    <div class="kv-grid">
+      <div class="kv-item"><div class="kv-label">Expected Closing Stock</div><div class="kv-value" style="font-size:18px; font-weight:700;">{{ "%.2f"|format(balance.expected_closing) }} {{ container.unit }}</div></div>
+      <div class="kv-item"><div class="kv-label">Physical Closing Stock</div><div class="kv-value" style="font-size:18px; font-weight:700;">{{ "%.2f"|format(balance.physical_closing) if balance.physical_closing is not none else "Not yet verified" }}</div></div>
+    </div>
+    {% if balance.variance is not none %}
+    <div class="alert {{ 'alert-error' if balance.variance_percent and balance.variance_percent|abs > 1 else 'alert-success' }}" style="margin-top:12px;">
+      Variance: {{ "%+.2f"|format(balance.variance) }} {{ container.unit }} ({{ "%+.2f"|format(balance.variance_percent) }}%)
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="section-title">Transaction History (Ledger)</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>Type</th><th>Change</th><th>Before</th><th>After</th><th>User</th><th>Notes</th></tr></thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td><span class="pill">{{ t.transaction_type.replace('_',' ') }}</span></td>
+        <td>{{ "%+.2f"|format(t.quantity_delta) }} {{ t.unit }}</td>
+        <td>{{ "%.2f"|format(t.expected_quantity_before) }}</td>
+        <td>{{ "%.2f"|format(t.expected_quantity_after) }}</td>
+        <td>{{ t.user.full_name }}</td>
+        <td>{{ t.purpose or t.notes or "-" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7"><div class="empty-state">No transactions recorded yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

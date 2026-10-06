@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block page_title %}{{ chemical.name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/chemicals">Chemicals</a> / {{ chemical.name }}</div>
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+  <div>
+    <h2 style="margin:0 0 4px;">{{ chemical.name }} <span class="pill">{{ chemical.chemical_code }}</span></h2>
+    <div style="color:var(--color-text-muted); font-size:13px;">
+      {{ chemical.cas_number or "No CAS on file" }} &bull; {{ chemical.category or "Uncategorized" }}
+      {% if chemical.aliases %} &bull; a.k.a. {{ chemical.aliases | map(attribute="alias") | join(", ") }}{% endif %}
+    </div>
+  </div>
+  {% if user.role in ["ADMIN","LAB_MANAGER"] %}
+  <div style="display:flex; gap:8px;">
+    <a href="/chemicals/{{ chemical.id }}/edit" class="btn btn-secondary">Edit</a>
+    <form method="post" action="/chemicals/{{ chemical.id }}/archive" data-confirm="Archive {{ chemical.name }}? It will be hidden from active lists but its history is preserved.">
+      <button class="btn btn-secondary" type="submit">Archive</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+  <div class="metric-card"><div class="metric-label">Available Stock</div><div class="metric-value">{{ "%.2f"|format(stock.total_available) }} {{ chemical.unit }}</div></div>
+  <div class="metric-card"><div class="metric-label">Containers</div><div class="metric-value">{{ containers|length }}</div></div>
+  <div class="metric-card"><div class="metric-label">Avg Monthly Use</div><div class="metric-value">{{ "%.2f"|format(avg_monthly) }}</div></div>
+  <div class="metric-card {{ 'danger' if stock.is_below_min else ('warn' if stock.is_low else 'ok') }}">
+    <div class="metric-label">Reorder Level</div><div class="metric-value">{{ chemical.reorder_level }}</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <a href="?tab=identity" class="{{ 'active' if tab == 'identity' }}">Identity</a>
+  <a href="?tab=inventory" class="{{ 'active' if tab == 'inventory' }}">Inventory</a>
+  <a href="?tab=usage" class="{{ 'active' if tab == 'usage' }}">Usage History</a>
+  <a href="?tab=transfers" class="{{ 'active' if tab == 'transfers' }}">Transfers</a>
+  <a href="?tab=verification" class="{{ 'active' if tab == 'verification' }}">Physical Verification</a>
+  <a href="?tab=audit" class="{{ 'active' if tab == 'audit' }}">Audit History</a>
+</div>
+
+{% if tab == "identity" %}
+<div class="card">
+  <div class="kv-grid">
+    <div class="kv-item"><div class="kv-label">Formula</div><div class="kv-value">{{ chemical.formula or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Molecular Weight</div><div class="kv-value">{{ chemical.molecular_weight or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Grade</div><div class="kv-value">{{ chemical.grade or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Concentration</div><div class="kv-value">{{ chemical.concentration or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Manufacturer</div><div class="kv-value">{{ chemical.manufacturer or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Supplier</div><div class="kv-value">{{ chemical.supplier.name if chemical.supplier else "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Catalog Number</div><div class="kv-value">{{ chemical.catalog_number or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Physical State</div><div class="kv-value">{{ chemical.physical_state or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Storage Requirements</div><div class="kv-value">{{ chemical.storage_requirements or "-" }}</div></div>
+    <div class="kv-item"><div class="kv-label">Temperature Requirements</div><div class="kv-value">{{ chemical.temperature_requirements or "-" }}</div></div>
+  </div>
+  {% if chemical.notes %}<div style="margin-top:14px;"><div class="kv-label">Notes</div><div class="kv-value">{{ chemical.notes }}</div></div>{% endif %}
+</div>
+
+{% elif tab == "inventory" %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Container</th><th>Batch/Lot</th><th>Expected Qty</th><th>Location</th><th>Laboratory</th><th>Expiry</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for c in containers %}
+      <tr onclick="location.href='/containers/{{ c.id }}'" style="cursor:pointer">
+        <td>{{ c.container_code }}</td>
+        <td>{{ c.batch_lot or "-" }}</td>
+        <td>{{ "%.2f"|format(c.expected_quantity) }} {{ c.unit }}</td>
+        <td>{{ c.location.full_path if c.location else "-" }}</td>
+        <td>{{ c.laboratory.name }}</td>
+        <td>{{ c.expiry_date or "-" }}</td>
+        <td><span class="badge badge-{{ c.status }}">{{ c.status.replace('_',' ') }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7"><div class="empty-state">No containers for this chemical yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% elif tab == "usage" %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>Container</th><th>User</th><th>Quantity</th><th>Purpose</th></tr></thead>
+    <tbody>
+      {% for t in usage_txns %}
+      <tr><td>{{ t.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td><td>{{ t.container.container_code }}</td><td>{{ t.user.full_name }}</td><td>{{ "%.2f"|format(-t.quantity_delta) }} {{ t.unit }}</td><td>{{ t.purpose or "-" }}</td></tr>
+      {% else %}
+      <tr><td colspan="5"><div class="empty-state">No usage recorded yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% elif tab == "transfers" %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Transfer</th><th>Quantity</th><th>From</th><th>To</th><th>Status</th><th>Requested</th></tr></thead>
+    <tbody>
+      {% for t in transfers %}
+      <tr><td>{{ t.transfer_code }}</td><td>{{ "%.2f"|format(t.quantity) }} {{ t.unit }}</td><td>{{ t.source_laboratory.name }}</td><td>{{ t.destination_laboratory.name }}</td><td><span class="badge badge-{{ t.status }}">{{ t.status }}</span></td><td>{{ t.requested_at.strftime("%Y-%m-%d") }}</td></tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state">No transfers recorded for this chemical.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% elif tab == "verification" %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>Container</th><th>Expected</th><th>Physical</th><th>Variance</th><th>Reason</th></tr></thead>
+    <tbody>
+      {% for c in counts %}
+      <tr><td>{{ c.counted_at.strftime("%Y-%m-%d %H:%M") }}</td><td>{{ c.container.container_code }}</td><td>{{ "%.2f"|format(c.expected_quantity) }}</td><td>{{ "%.2f"|format(c.physical_quantity) }}</td><td>{{ "%+.2f"|format(c.variance) }} ({{ "%+.2f"|format(c.variance_percent) }}%)</td><td>{{ c.reason or "-" }}</td></tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state">No physical verification recorded yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% elif tab == "audit" %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      {% for a in audit_entries %}
+      <tr><td>{{ a.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td><td>{{ a.user.full_name if a.user else "System" }}</td><td>{{ a.action }}</td><td>{{ a.description }}</td></tr>
+      {% else %}
+      <tr><td colspan="4"><div class="empty-state">No audit entries directly on the chemical master yet. See Inventory and Usage History tabs for container-level history.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

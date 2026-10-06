@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block page_title %}Search{% endblock %}
+{% block content %}
+<h2 style="margin-top:0;">Search results for "{{ q }}"</h2>
+{% if results and results.message %}<div class="alert alert-info">{{ results.message }}</div>{% endif %}
+
+{% if not results %}
+<div class="empty-state">
+  <h3>Try a search</h3>
+  <p>Examples: <em>where is methanol</em>, <em>chemicals in Lab 204</em>, <em>expiring this month</em>, <em>below 500 mL</em>, <em>unused for 1 year</em>, <em>who used methanol</em></p>
+</div>
+{% else %}
+
+{% if results.chemicals %}
+<div class="section-title" style="margin-top:0;">Chemicals</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Code</th><th>Name</th><th>CAS</th></tr></thead>
+  <tbody>{% for c in results.chemicals %}<tr onclick="location.href='/chemicals/{{ c.id }}'" style="cursor:pointer"><td>{{ c.chemical_code }}</td><td>{{ c.name }}</td><td>{{ c.cas_number or "-" }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+
+{% if results.containers %}
+<div class="section-title">Containers</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Container</th><th>Chemical</th><th>Quantity</th><th>Laboratory</th><th>Status</th></tr></thead>
+  <tbody>{% for c in results.containers %}<tr onclick="location.href='/containers/{{ c.id }}'" style="cursor:pointer"><td>{{ c.container_code }}</td><td>{{ c.chemical.name }}</td><td>{{ "%.2f"|format(c.expected_quantity) }} {{ c.unit }}</td><td>{{ c.laboratory.name }}</td><td><span class="badge badge-{{ c.status }}">{{ c.status.replace('_',' ') }}</span></td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+
+{% if results.laboratories %}
+<div class="section-title">Laboratories</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Code</th><th>Name</th></tr></thead>
+  <tbody>{% for l in results.laboratories %}<tr onclick="location.href='/laboratories/{{ l.id }}'" style="cursor:pointer"><td>{{ l.code }}</td><td>{{ l.name }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+
+{% if results.transactions is defined %}
+<div class="section-title">Recent Usage</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>When</th><th>Container</th><th>User</th><th>Quantity</th></tr></thead>
+  <tbody>
+    {% for t in results.transactions %}<tr><td>{{ t.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td><td>{{ t.container.container_code }}</td><td>{{ t.user.full_name }}</td><td>{{ "%.2f"|format(-t.quantity_delta) }} {{ t.unit }}</td></tr>
+    {% else %}<tr><td colspan="4"><div class="empty-state">No usage found.</div></td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
+
+{% if not results.chemicals and not results.containers and not results.laboratories and results.transactions is not defined %}
+<div class="empty-state"><h3>No results</h3><p>Try a different search term.</p></div>
+{% endif %}
+{% endif %}
+{% endblock %}

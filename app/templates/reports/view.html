@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<style>
+@media print {
+  .sidebar, .topbar, .table-toolbar, .app-footer, .no-print { display: none !important; }
+  .app-shell { display: block !important; }
+  .main-content { padding: 0 !important; max-width: none !important; }
+}
+</style>
+<div class="table-wrap">
+  <div class="table-toolbar no-print">
+    <div>
+      <strong>{{ title }}</strong>
+      <span style="color:var(--color-text-muted); margin-left:8px;">{{ total_rows }} rows &bull; Created by {{ settings.creator_name }}</span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="/reports/{{ report_key }}/export.csv" class="btn btn-secondary btn-sm">Export CSV</a>
+      <a href="/reports/{{ report_key }}/export.xlsx" class="btn btn-secondary btn-sm">Export Excel</a>
+      <button class="btn btn-secondary btn-sm" onclick="window.print()">Print / Save as PDF</button>
+      <a href="/reports" class="btn btn-secondary btn-sm">Back to Reports</a>
+    </div>
+  </div>
+  {% if truncated %}
+  <div class="alert alert-info no-print" style="margin:0 14px 14px;">
+    Showing the first {{ "{:,}".format(rows|length) }} of {{ "{:,}".format(total_rows) }} rows on screen for speed. Use Export CSV/Excel for the complete report.
+  </div>
+  {% endif %}
+  <table>
+    <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+      {% else %}
+      <tr><td colspan="{{ headers|length }}"><div class="empty-state">No data available for this report yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block page_title %}{{ "Edit Chemical" if chemical else "Add Chemical" }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:900px;">
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="{{ '/chemicals/%d/edit'|format(chemical.id) if chemical else '/chemicals/new' }}" class="form-grid">
+    <div class="field span-2"><label>Chemical name <span class="req">*</span></label><input name="name" required value="{{ chemical.name if chemical else '' }}"></div>
+
+    {% if not chemical %}
+    <div class="field span-2"><label>Synonyms (comma separated)</label><input name="aliases" placeholder="e.g. Methyl alcohol, Wood spirit"></div>
+    {% endif %}
+
+    <div class="field"><label>CAS number</label><input name="cas_number" value="{{ chemical.cas_number if chemical else '' }}" placeholder="e.g. 67-56-1"></div>
+    <div class="field"><label>Formula</label><input name="formula" value="{{ chemical.formula if chemical else '' }}"></div>
+    <div class="field"><label>Molecular weight</label><input type="number" step="any" name="molecular_weight" value="{{ chemical.molecular_weight if chemical else '' }}"></div>
+    <div class="field"><label>Grade</label><input name="grade" value="{{ chemical.grade if chemical else '' }}" placeholder="e.g. ACS, HPLC, Reagent"></div>
+    <div class="field"><label>Concentration</label><input name="concentration" value="{{ chemical.concentration if chemical else '' }}"></div>
+    <div class="field"><label>Manufacturer</label><input name="manufacturer" value="{{ chemical.manufacturer if chemical else '' }}"></div>
+    <div class="field"><label>Catalog number</label><input name="catalog_number" value="{{ chemical.catalog_number if chemical else '' }}"></div>
+    <div class="field"><label>Category</label><input name="category" value="{{ chemical.category if chemical else '' }}" placeholder="e.g. Solvent, Acid, Reagent"></div>
+    <div class="field"><label>Physical state</label>
+      <select name="physical_state">
+        {% for s in ["Liquid","Solid","Gas","Powder","Gel"] %}<option value="{{ s }}" {{ "selected" if chemical and chemical.physical_state == s }}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>Storage requirements</label><input name="storage_requirements" value="{{ chemical.storage_requirements if chemical else '' }}" placeholder="e.g. Flammable cabinet"></div>
+    <div class="field"><label>Temperature requirements</label><input name="temperature_requirements" value="{{ chemical.temperature_requirements if chemical else '' }}" placeholder="e.g. 2-8&deg;C"></div>
+    <div class="field"><label>Unit <span class="req">*</span></label>
+      <select name="unit" required>
+        {% for u in ["mL","L","g","kg","mg"] %}<option value="{{ u }}" {{ "selected" if chemical and chemical.unit == u }}>{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field"><label>Minimum stock</label><input type="number" step="any" name="min_stock" value="{{ chemical.min_stock if chemical else 0 }}"></div>
+    <div class="field"><label>Reorder level</label><input type="number" step="any" name="reorder_level" value="{{ chemical.reorder_level if chemical else 0 }}"></div>
+    <div class="field"><label>Target stock</label><input type="number" step="any" name="target_stock" value="{{ chemical.target_stock if chemical else 0 }}"></div>
+    <div class="field"><label>Safety stock</label><input type="number" step="any" name="safety_stock" value="{{ chemical.safety_stock if chemical else 0 }}"></div>
+
+    <div class="field span-2"><label>Notes</label><textarea name="notes">{{ chemical.notes if chemical else '' }}</textarea></div>
+
+    <div class="btn-row" style="grid-column: span 2;">
+      <button type="submit" class="btn btn-primary">{{ "Save Changes" if chemical else "Create Chemical" }}</button>
+      <a href="/chemicals{{ '/%d'|format(chemical.id) if chemical else '' }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

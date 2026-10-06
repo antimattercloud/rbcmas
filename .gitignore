@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/*.db
+data/*.db-journal
+backups/
+.env
+*.egg-info/
+.idea/
+.vscode/
+tests/test_rbcmas.db

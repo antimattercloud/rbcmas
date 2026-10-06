@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block page_title %}Not permitted{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <h3>You don't have permission to do that</h3>
+  <p>This area is restricted for your role ({{ user.role.replace('_',' ') if user else '' }}). Contact your administrator if you believe this is a mistake.</p>
+  <a href="/dashboard" class="btn btn-secondary">Back to dashboard</a>
+</div>
+{% endblock %}

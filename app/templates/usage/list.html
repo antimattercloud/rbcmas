@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block page_title %}Usage History{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <span style="color:var(--color-text-muted);">All recorded chemical usage, most recent first.</span>
+    <a href="/usage/new" class="btn btn-primary">+ Record Usage</a>
+  </div>
+  <table>
+    <thead><tr><th>When</th><th>Container</th><th>Chemical</th><th>User</th><th>Quantity</th><th>Purpose</th></tr></thead>
+    <tbody>
+      {% for t in page_obj.items %}
+      <tr onclick="location.href='/containers/{{ t.container_id }}'" style="cursor:pointer">
+        <td>{{ t.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ t.container.container_code }}</td>
+        <td>{{ t.container.chemical.name }}</td>
+        <td>{{ t.user.full_name }}</td>
+        <td>{{ "%.2f"|format(-t.quantity_delta) }} {{ t.unit }}</td>
+        <td>{{ t.purpose or "-" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state"><h3>No usage recorded yet</h3><p>Record chemical usage from a container's page or the button above.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

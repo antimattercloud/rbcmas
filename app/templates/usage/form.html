@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block page_title %}Record Chemical Usage{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px;">
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/usage/new" class="form-grid single">
+    {% if container %}
+    <div class="field">
+      <label>Container</label>
+      <input type="text" value="{{ container.container_code }} - {{ container.chemical.name }} ({{ '%.2f'|format(container.expected_quantity) }} {{ container.unit }} available)" disabled>
+      <input type="hidden" name="container_id" value="{{ container.id }}">
+    </div>
+    {% else %}
+    <div class="field">
+      <label>Container <span class="req">*</span></label>
+      <select name="container_id" required id="container-select">
+        <option value="">Select a container...</option>
+        {% for c in containers %}<option value="{{ c.id }}">{{ c.container_code }} - {{ c.chemical.name }} ({{ "%.2f"|format(c.expected_quantity) }} {{ c.unit }} available)</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="field">
+      <label>Quantity used <span class="req">*</span></label>
+      <input type="number" step="any" min="0.001" name="quantity_used" required
+             {% if container %}data-use-qty data-available="{{ container.expected_quantity }}"{% endif %}>
+      {% if container %}<span class="field-hint">Remaining after this use: <strong data-remaining-out>{{ "%.2f"|format(container.expected_quantity) }}</strong> {{ container.unit }}</span>{% endif %}
+    </div>
+
+    <div class="field">
+      <label>Purpose</label>
+      <input name="purpose" placeholder="e.g. GC-MS mobile phase preparation">
+    </div>
+    <div class="field">
+      <label>Project</label>
+      <select name="project_id">
+        <option value="">(none)</option>
+        {% for p in projects %}<option value="{{ p.id }}">{{ p.name }} ({{ p.code }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>Remarks</label>
+      <textarea name="notes"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">Record Usage</button>
+      <a href="{{ '/containers/%d'|format(container.id) if container else '/containers' }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

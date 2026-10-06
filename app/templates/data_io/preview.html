@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block page_title %}Import Preview &middot; {{ entity_label }}{% endblock %}
+{% block content %}
+<h2 style="margin-top:0;">IMPORT PREVIEW &middot; {{ entity_label }}</h2>
+
+<div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+  <div class="metric-card"><div class="metric-label">Total Rows</div><div class="metric-value">{{ result.total_rows }}</div></div>
+  <div class="metric-card ok"><div class="metric-label">To Create</div><div class="metric-value">{{ result.to_create|length }}</div></div>
+  <div class="metric-card"><div class="metric-label">To Update</div><div class="metric-value">{{ result.to_update|length }}</div></div>
+  <div class="metric-card {{ 'danger' if result.errors else '' }}"><div class="metric-label">Errors</div><div class="metric-value">{{ result.errors|length }}</div></div>
+</div>
+
+{% if result.errors %}
+<div class="section-title">Row Errors ({{ result.errors|length }})</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Row</th><th>Field</th><th>Problem</th><th>Suggested Action</th></tr></thead>
+    <tbody>
+      {% for e in result.errors %}
+      <tr><td>{{ e.row }}</td><td>{{ e.field }}</td><td>{{ e.problem }}</td><td>{{ e.suggestion }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div style="margin-top:20px; display:flex; gap:10px;">
+  {% if result.valid_count > 0 %}
+  <form method="post" action="/data-io/{{ entity_type }}/confirm" data-confirm="Import {{ result.valid_count }} valid rows ({{ result.to_create|length }} new, {{ result.to_update|length }} updated)? Rows with errors will be skipped.">
+    <input type="hidden" name="encoded_csv" value="{{ encoded_csv }}">
+    <input type="hidden" name="filename" value="{{ filename }}">
+    <button type="submit" class="btn btn-primary">Confirm Import ({{ result.valid_count }} rows)</button>
+  </form>
+  {% endif %}
+  <a href="/data-io" class="btn btn-secondary">Cancel</a>
+</div>
+{% endblock %}

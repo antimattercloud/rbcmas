@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block page_title %}Data Import / Export{% endblock %}
+{% block content %}
+
+<div class="metric-grid" style="grid-template-columns: repeat(4, 1fr);">
+  {% for key, label in entity_labels.items() %}
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:10px;">{{ label }}</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <a href="/data-io/{{ key }}/template" class="btn btn-secondary btn-sm">Download CSV Template</a>
+      <a href="/data-io/{{ key }}/export" class="btn btn-secondary btn-sm">Export Current Data (CSV)</a>
+      {% if user.role in ["ADMIN","LAB_MANAGER"] %}
+      <form method="post" action="/data-io/{{ key }}/preview" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:6px;">
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit" class="btn btn-primary btn-sm">Upload &amp; Validate</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section-title">Recent Imports</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>Type</th><th>File</th><th>Total</th><th>Created</th><th>Updated</th><th>Errors</th><th>By</th></tr></thead>
+    <tbody>
+      {% for imp in recent_imports %}
+      <tr>
+        <td>{{ imp.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ imp.entity_type }}</td>
+        <td>{{ imp.filename }}</td>
+        <td>{{ imp.total_rows }}</td>
+        <td>{{ imp.created }}</td>
+        <td>{{ imp.updated }}</td>
+        <td>{{ imp.errors }}</td>
+        <td>{{ imp.user.full_name }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty-state">No imports yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

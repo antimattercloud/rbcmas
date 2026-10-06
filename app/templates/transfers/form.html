@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block page_title %}Request Transfer{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px;">
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/transfers/new" class="form-grid single">
+    {% if container %}
+    <div class="field">
+      <label>Container</label>
+      <input type="text" value="{{ container.container_code }} - {{ container.chemical.name }} ({{ '%.2f'|format(container.expected_quantity) }} {{ container.unit }} in {{ container.laboratory.name }})" disabled>
+      <input type="hidden" name="container_id" value="{{ container.id }}">
+    </div>
+    {% else %}
+    <div class="field">
+      <label>Container <span class="req">*</span></label>
+      <select name="container_id" required>
+        <option value="">Select a container...</option>
+        {% for c in containers %}<option value="{{ c.id }}">{{ c.container_code }} - {{ c.chemical.name }} ({{ "%.2f"|format(c.expected_quantity) }} {{ c.unit }} in {{ c.laboratory.name }})</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="field"><label>Quantity to transfer <span class="req">*</span></label><input type="number" step="any" min="0.001" name="quantity" required>
+      <span class="field-hint">If this equals the full remaining quantity, the container itself moves. Otherwise a new container is created at the destination.</span>
+    </div>
+
+    <div class="field">
+      <label>Destination laboratory <span class="req">*</span></label>
+      <select name="destination_laboratory_id" required>
+        <option value="">Select laboratory...</option>
+        {% for lab in laboratories %}<option value="{{ lab.id }}">{{ lab.name }} ({{ lab.code }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>Destination location</label>
+      <select name="destination_location_id">
+        <option value="">(not specified)</option>
+        {% for loc in locations %}<option value="{{ loc.id }}">{{ loc.full_path }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>Reason</label><textarea name="reason"></textarea></div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">Request Transfer</button>
+      <a href="/transfers" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

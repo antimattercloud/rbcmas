@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block page_title %}Administration &middot; Projects{% endblock %}
+{% block content %}
+{% include "admin/_tabs.html" %}
+<div class="grid-2">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Code</th><th>Name</th><th>Laboratory</th></tr></thead>
+      <tbody>
+        {% for p in projects %}
+        <tr><td>{{ p.code }}</td><td>{{ p.name }}</td><td>{{ p.laboratory.name if p.laboratory else "-" }}</td></tr>
+        {% else %}
+        <tr><td colspan="3"><div class="empty-state">No projects yet.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Add Project</div>
+    <form method="post" action="/admin/projects" class="form-grid single">
+      <div class="field"><label>Code <span class="req">*</span></label><input name="code" required></div>
+      <div class="field"><label>Name <span class="req">*</span></label><input name="name" required></div>
+      <div class="field"><label>Laboratory</label>
+        <select name="laboratory_id"><option value="">(not specified)</option>{% for lab in laboratories %}<option value="{{ lab.id }}">{{ lab.name }}</option>{% endfor %}</select>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary">Add Project</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

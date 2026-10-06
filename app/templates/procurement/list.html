@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block page_title %}Procurement{% endblock %}
+{% block content %}
+
+{% if low_stock %}
+<div class="section-title" style="margin-top:0;">Chemicals Needing Reorder ({{ low_stock|length }})</div>
+<div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Chemical</th><th>Available</th><th>Reorder Level</th><th></th></tr></thead>
+    <tbody>
+      {% for row in low_stock %}
+      <tr>
+        <td><a href="/chemicals/{{ row.chemical.id }}">{{ row.chemical.name }}</a></td>
+        <td>{{ "%.2f"|format(row.total_available) }} {{ row.chemical.unit }}</td>
+        <td>{{ row.chemical.reorder_level }} {{ row.chemical.unit }}</td>
+        <td><a href="/procurement/new?chemical_id={{ row.chemical.id }}" class="btn btn-sm btn-primary">Request Purchase</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <form method="get" data-live-filter-form>
+      <select name="status">
+        <option value="">All statuses</option>
+        {% for s in ["PENDING","APPROVED","ORDERED","RECEIVED","REJECTED"] %}<option value="{{ s }}" {{ "selected" if s == status }}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+    <a href="/procurement/new" class="btn btn-primary">+ New Purchase Request</a>
+  </div>
+  <table>
+    <thead><tr><th>Request</th><th>Chemical</th><th>Quantity</th><th>Requested By</th><th>Status</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for r in page_obj.items %}
+      <tr>
+        <td>{{ r.request_code }}</td>
+        <td>{{ r.chemical.name }}</td>
+        <td>{{ "%.2f"|format(r.quantity) }} {{ r.unit }}</td>
+        <td>{{ r.requested_by.full_name }}</td>
+        <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+        <td>{{ r.requested_at.strftime("%Y-%m-%d") }}</td>
+        <td style="display:flex; gap:6px;">
+          {% if user.role in ["ADMIN","LAB_MANAGER"] %}
+            {% if r.status == "PENDING" %}
+            <form method="post" action="/procurement/{{ r.id }}/decide"><input type="hidden" name="approve" value="yes"><button class="btn btn-sm btn-primary" type="submit">Approve</button></form>
+            <form method="post" action="/procurement/{{ r.id }}/decide"><input type="hidden" name="approve" value="no"><button class="btn btn-sm btn-danger" type="submit">Reject</button></form>
+            {% elif r.status == "APPROVED" %}
+            <form method="post" action="/procurement/{{ r.id }}/mark-ordered"><button class="btn btn-sm btn-secondary" type="submit">Mark Ordered</button></form>
+            {% elif r.status == "ORDERED" %}
+            <form method="post" action="/procurement/{{ r.id }}/mark-received"><button class="btn btn-sm btn-secondary" type="submit">Mark Received</button></form>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7"><div class="empty-state"><h3>No purchase requests yet</h3><p>Submit a request from the reorder list above or the button above.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

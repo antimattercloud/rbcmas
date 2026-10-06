@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block page_title %}Administration &middot; Users{% endblock %}
+{% block content %}
+{% include "admin/_tabs.html" %}
+
+<div class="grid-2">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Laboratory</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.full_name }}</td>
+          <td>{{ u.email }}</td>
+          <td><span class="badge badge-role">{{ u.role.replace('_',' ') }}</span></td>
+          <td>{{ u.laboratory.name if u.laboratory else "-" }}</td>
+          <td>{% if u.is_active %}<span class="badge badge-AVAILABLE">Active</span>{% else %}<span class="badge badge-ARCHIVED">Disabled</span>{% endif %}</td>
+          <td>
+            {% if u.id != user.id %}
+            <form method="post" action="/admin/users/{{ u.id }}/toggle-active">
+              <button class="btn btn-sm btn-secondary" type="submit">{{ "Disable" if u.is_active else "Enable" }}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Add User</div>
+    <form method="post" action="/admin/users" class="form-grid single">
+      <div class="field"><label>Full name <span class="req">*</span></label><input name="full_name" required></div>
+      <div class="field"><label>Email <span class="req">*</span></label><input type="email" name="email" required></div>
+      <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" required minlength="8"></div>
+      <div class="field"><label>Role <span class="req">*</span></label>
+        <select name="role" required>{% for r in roles %}<option value="{{ r }}">{{ r.replace('_',' ') }}</option>{% endfor %}</select>
+      </div>
+      <div class="field"><label>Laboratory (optional scoping)</label>
+        <select name="laboratory_id"><option value="">(all / not scoped)</option>{% for lab in laboratories %}<option value="{{ lab.id }}">{{ lab.name }}</option>{% endfor %}</select>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary">Create User</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

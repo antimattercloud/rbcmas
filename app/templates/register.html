@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Create Account &middot; {{ settings.app_short_name }}{% endblock %}
+{% block guest_content %}
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg, #0f2c36, #14424f); padding:24px 0;">
+  <div class="card" style="width:420px; padding:32px;">
+    <div style="text-align:center; margin-bottom:22px;">
+      <div style="font-size:19px; font-weight:800; color:var(--color-primary-dark);">{{ settings.app_short_name }}</div>
+      <div style="font-size:12px; color:var(--color-text-muted); margin-top:4px;">Create Account</div>
+    </div>
+
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    <div class="alert alert-info">
+      New accounts are created as <strong>Researcher</strong> and must be approved by an administrator (Administration &gt; Users) before you can sign in.
+    </div>
+
+    <form method="post" action="/register" class="form-grid single">
+      <div class="field">
+        <label>Full name <span class="req">*</span></label>
+        <input name="full_name" required autofocus value="{{ full_name or '' }}">
+      </div>
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" name="email" required value="{{ email or '' }}">
+      </div>
+      <div class="field">
+        <label>Laboratory</label>
+        <select name="laboratory_id">
+          <option value="">(not scoped to a specific laboratory)</option>
+          {% for lab in laboratories %}
+          <option value="{{ lab.id }}" {{ "selected" if laboratory_id == lab.id|string }}>{{ lab.name }} ({{ lab.code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <input type="password" name="password" required minlength="8">
+        <span class="field-hint">At least 8 characters.</span>
+      </div>
+      <div class="field">
+        <label>Confirm password <span class="req">*</span></label>
+        <input type="password" name="confirm_password" required minlength="8">
+      </div>
+      <button type="submit" class="btn btn-primary" style="justify-content:center;">Create Account</button>
+    </form>
+
+    <div style="margin-top:16px; text-align:center; font-size:12.5px;">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+    <div style="margin-top:14px; text-align:center; font-size:11px; color:#9fb2bb;">
+      {{ settings.footer_text }}
+    </div>
+  </div>
+</div>
+{% endblock %}

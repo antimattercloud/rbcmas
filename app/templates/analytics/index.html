@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block page_title %}Consumption Analytics{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="section-title" style="margin-top:0;">Monthly Consumption Trend (12 months)</div>
+  {{ trend_svg | safe }}
+</div>
+
+<div class="grid-2" style="margin-top:16px;">
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Most Consumed Chemicals (180 days)</div>
+    {{ top_svg | safe }}
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Laboratory-wise Inventory Volume</div>
+    {{ lab_svg | safe }}
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <div class="section-title" style="margin-top:0;">Chemical-wise Consumption Lookup</div>
+  <form method="get" style="display:flex; gap:10px; align-items:center;">
+    <select name="chemical_id" onchange="this.form.submit()">
+      <option value="">Select a chemical...</option>
+      {% for c in chemicals %}<option value="{{ c.id }}" {{ "selected" if selected_chemical and selected_chemical.id == c.id }}>{{ c.name }}</option>{% endfor %}
+    </select>
+  </form>
+  {% if selected_chemical %}
+  <p style="margin-top:12px;">
+    <strong>{{ selected_chemical.name }}</strong> - average monthly consumption (last 6 months):
+    <strong>{{ "%.2f"|format(chemical_avg) }} {{ selected_chemical.unit }}</strong>.
+    <span class="field-hint">Simple moving-average estimate, clearly labelled - not a guaranteed forecast.</span>
+  </p>
+  {% endif %}
+</div>
+
+<div class="grid-2" style="margin-top:16px;">
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Low Stock (below reorder level)</div>
+    <div class="table-wrap" style="border:none; box-shadow:none;">
+      <table>
+        <thead><tr><th>Chemical</th><th>Available</th><th>Reorder Level</th></tr></thead>
+        <tbody>
+          {% for row in low_stock %}
+          <tr><td><a href="/chemicals/{{ row.chemical.id }}">{{ row.chemical.name }}</a></td><td>{{ "%.2f"|format(row.total_available) }}</td><td>{{ row.chemical.reorder_level }}</td></tr>
+          {% else %}
+          <tr><td colspan="3"><div class="empty-state">Nothing below reorder level right now.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Inactive / Dead Stock</div>
+    <div class="table-wrap" style="border:none; box-shadow:none;">
+      <table>
+        <thead><tr><th>Container</th><th>Chemical</th><th>Remaining</th></tr></thead>
+        <tbody>
+          {% for c in dead_stock[:15] %}
+          <tr><td><a href="/containers/{{ c.id }}">{{ c.container_code }}</a></td><td>{{ c.chemical.name }}</td><td>{{ "%.2f"|format(c.expected_quantity) }} {{ c.unit }}</td></tr>
+          {% else %}
+          <tr><td colspan="3"><div class="empty-state">No inactive stock detected.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

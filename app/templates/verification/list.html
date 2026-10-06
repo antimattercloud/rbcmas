@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block page_title %}Physical Verification{% endblock %}
+{% block content %}
+
+{% if pending_adjustments %}
+<div class="section-title" style="margin-top:0;">Pending Adjustment Approvals ({{ pending_adjustments|length }})</div>
+<div class="table-wrap" style="margin-bottom:24px;">
+  <table>
+    <thead><tr><th>Container</th><th>Previous Expected</th><th>Physical</th><th>Difference</th><th>Reason</th><th>Requested By</th><th></th></tr></thead>
+    <tbody>
+      {% for adj in pending_adjustments %}
+      <tr>
+        <td><a href="/containers/{{ adj.container_id }}">{{ adj.container.container_code }}</a></td>
+        <td>{{ "%.2f"|format(adj.previous_expected_quantity) }}</td>
+        <td>{{ "%.2f"|format(adj.physical_quantity) }}</td>
+        <td>{{ "%+.2f"|format(adj.difference) }}</td>
+        <td>{{ adj.reason }}{% if adj.reason_notes %} - {{ adj.reason_notes }}{% endif %}</td>
+        <td>{{ adj.requested_by.full_name }}</td>
+        <td style="display:flex; gap:6px;">
+          {% if user.role in ["ADMIN","LAB_MANAGER"] %}
+          <form method="post" action="/verification/adjustments/{{ adj.id }}/decide"><input type="hidden" name="approve" value="yes"><button class="btn btn-sm btn-primary" type="submit">Approve</button></form>
+          <form method="post" action="/verification/adjustments/{{ adj.id }}/decide"><input type="hidden" name="approve" value="no"><button class="btn btn-sm btn-danger" type="submit">Reject</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <span style="color:var(--color-text-muted);">All physical verification checkpoints, most recent first.</span>
+    <a href="/verification/new" class="btn btn-primary">+ New Verification</a>
+  </div>
+  <table>
+    <thead><tr><th>When</th><th>Container</th><th>Expected</th><th>Physical</th><th>Variance</th><th>Counted By</th></tr></thead>
+    <tbody>
+      {% for c in page_obj.items %}
+      <tr>
+        <td>{{ c.counted_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td><a href="/containers/{{ c.container_id }}">{{ c.container.container_code }}</a></td>
+        <td>{{ "%.2f"|format(c.expected_quantity) }}</td>
+        <td>{{ "%.2f"|format(c.physical_quantity) }}</td>
+        <td style="color: {{ 'var(--color-danger)' if c.requires_review else 'var(--color-success)' }};">{{ "%+.2f"|format(c.variance) }} ({{ "%+.2f"|format(c.variance_percent) }}%)</td>
+        <td>{{ c.counted_by.full_name }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state"><h3>No physical verifications yet</h3><p>Run your first physical verification from a container's page or the button above.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

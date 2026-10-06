@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block page_title %}Physical Verification{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px;">
+  {% if error %}<div class="alert alert-error"><strong>INVENTORY DISCREPANCY - REVIEW REQUIRED.</strong> {{ error }}</div>{% endif %}
+  <form method="post" action="/verification/new" class="form-grid single">
+    {% if container %}
+    <div class="field">
+      <label>Container</label>
+      <input type="text" value="{{ container.container_code }} - {{ container.chemical.name }}" disabled>
+      <input type="hidden" name="container_id" value="{{ container.id }}">
+    </div>
+    {% else %}
+    <div class="field">
+      <label>Container <span class="req">*</span></label>
+      <select name="container_id" required>
+        <option value="">Select a container...</option>
+        {% for c in containers %}<option value="{{ c.id }}">{{ c.container_code }} - {{ c.chemical.name }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    {% if container %}
+    <div class="field">
+      <label>Expected quantity</label>
+      <input type="text" value="{{ '%.3f'|format(container.expected_quantity) }} {{ container.unit }}" disabled>
+    </div>
+    <div class="field">
+      <label>Physical quantity counted <span class="req">*</span></label>
+      <input type="number" step="any" min="0" name="physical_quantity" required
+             data-physical-qty data-expected="{{ container.expected_quantity }}" data-tolerance="{{ tolerance }}"
+             value="{{ prefill_qty or '' }}">
+      <span class="field-hint">Variance: <strong data-variance-out>--</strong></span>
+    </div>
+    {% else %}
+    <div class="field"><label>Physical quantity counted <span class="req">*</span></label><input type="number" step="any" min="0" name="physical_quantity" required></div>
+    {% endif %}
+
+    <div class="field" data-reason-field style="display:{{ 'flex' if error else 'none' }};">
+      <label>Reason for discrepancy <span class="req">*</span></label>
+      <select name="reason">
+        <option value="">Select a reason...</option>
+        {% for r in reasons %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+      </select>
+      <span class="field-hint">Required when the variance exceeds the {{ tolerance }}% tolerance. This creates a pending adjustment for manager/admin approval - the recorded quantity is never silently overwritten.</span>
+    </div>
+
+    <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">Submit Verification</button>
+      <a href="{{ '/containers/%d'|format(container.id) if container else '/containers' }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

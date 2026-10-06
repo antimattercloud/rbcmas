@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block page_title %}Add Container{% endblock %}
+{% block content %}
+<div class="card" style="max-width:820px;">
+  {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/containers/new" class="form-grid">
+    <div class="field span-2">
+      <label>Chemical <span class="req">*</span></label>
+      <select name="chemical_id" required>
+        <option value="">Select a chemical...</option>
+        {% for chem in chemicals %}<option value="{{ chem.id }}">{{ chem.name }} ({{ chem.chemical_code }})</option>{% endfor %}
+      </select>
+      <span class="field-hint">Can't find it? <a href="/chemicals/new">Add a new chemical master record</a> first.</span>
+    </div>
+
+    <div class="field"><label>Batch / Lot number</label><input name="batch_lot"></div>
+    <div class="field"><label>Unit <span class="req">*</span></label>
+      <select name="unit" required>
+        {% for u in ["mL","L","g","kg","mg"] %}<option value="{{ u }}">{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field"><label>Container size <span class="req">*</span></label><input type="number" step="any" min="0" name="container_size" required></div>
+    <div class="field"><label>Initial quantity <span class="req">*</span></label><input type="number" step="any" min="0" name="initial_quantity" required></div>
+
+    <div class="field"><label>Date received <span class="req">*</span></label><input type="date" name="date_received" required value="{{ today }}"></div>
+    <div class="field"><label>Date opened</label><input type="date" name="date_opened"></div>
+    <div class="field"><label>Expiry date</label><input type="date" name="expiry_date"></div>
+
+    <div class="field"><label>Laboratory <span class="req">*</span></label>
+      <select name="laboratory_id" required>
+        <option value="">Select laboratory...</option>
+        {% for lab in laboratories %}<option value="{{ lab.id }}">{{ lab.name }} ({{ lab.code }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>Storage location</label>
+      <select name="location_id">
+        <option value="">(not specified)</option>
+        {% for loc in locations %}<option value="{{ loc.id }}">{{ loc.full_path }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field span-2"><label>Notes</label><textarea name="notes"></textarea></div>
+
+    <div class="btn-row" style="grid-column: span 2;">
+      <button type="submit" class="btn btn-primary">Create Container</button>
+      <a href="/containers" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

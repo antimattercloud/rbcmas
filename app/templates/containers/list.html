@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block page_title %}Containers{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <div class="table-toolbar">
+    <form method="get" data-live-filter-form>
+      <input type="search" name="q" placeholder="Search container, chemical, batch..." value="{{ q }}">
+      <select name="status">
+        <option value="">All statuses</option>
+        {% for s in statuses %}<option value="{{ s }}" {{ "selected" if s == status }}>{{ s.replace('_',' ') }}</option>{% endfor %}
+      </select>
+      <select name="laboratory_id">
+        <option value="">All laboratories</option>
+        {% for lab in laboratories %}<option value="{{ lab.id }}" {{ "selected" if laboratory_id == lab.id|string }}>{{ lab.name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% if user.role in ["ADMIN","LAB_MANAGER","RESEARCHER"] %}<a href="/containers/new" class="btn btn-primary">+ Add Container</a>{% endif %}
+  </div>
+  <table>
+    <thead><tr><th>Container</th><th>Chemical</th><th>Batch/Lot</th><th>Quantity</th><th>Laboratory</th><th>Expiry</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for c in page_obj.items %}
+      <tr onclick="location.href='/containers/{{ c.id }}'" style="cursor:pointer">
+        <td>{{ c.container_code }}{% if c.is_demo %}<span class="demo-tag">DEMO</span>{% endif %}</td>
+        <td>{{ c.chemical.name }}</td>
+        <td>{{ c.batch_lot or "-" }}</td>
+        <td>{{ "%.2f"|format(c.expected_quantity) }} / {{ "%.2f"|format(c.container_size) }} {{ c.unit }}</td>
+        <td>{{ c.laboratory.name }}</td>
+        <td>{{ c.expiry_date or "-" }}</td>
+        <td><span class="badge badge-{{ c.status }}">{{ c.status.replace('_',' ') }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7"><div class="empty-state"><h3>No containers found</h3><p>Add your first container or import inventory using CSV.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block page_title %}Locations{% endblock %}
+{% block content %}
+<div class="grid-2">
+  <div class="table-wrap">
+    <div class="table-toolbar"><strong style="padding:4px 0;">Building &rarr; Floor &rarr; Room &rarr; Storage Unit &rarr; Cabinet &rarr; Shelf</strong></div>
+    <table>
+      <thead><tr><th>Path</th><th>Type</th><th>Laboratory</th><th></th></tr></thead>
+      <tbody>
+        {% for loc in locations %}
+        <tr>
+          <td>{{ loc.full_path }}{% if loc.is_demo %}<span class="demo-tag">DEMO</span>{% endif %}</td>
+          <td><span class="pill">{{ loc.location_type.replace('_',' ') }}</span></td>
+          <td>{{ loc.laboratory.name if loc.laboratory else "-" }}</td>
+          <td>
+            {% if user.role in ["ADMIN","LAB_MANAGER"] %}
+            <form method="post" action="/locations/{{ loc.id }}/archive" data-confirm="Archive this location? Containers already stored here will keep their history.">
+              <button class="btn btn-sm btn-secondary" type="submit">Archive</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state"><h3>No locations yet</h3><p>Add your first storage location using the form.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if user.role in ["ADMIN","LAB_MANAGER"] %}
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Add Location</div>
+    <form method="post" action="/locations" class="form-grid single">
+      <div class="field">
+        <label>Name <span class="req">*</span></label>
+        <input name="name" required placeholder="e.g. Cabinet A">
+      </div>
+      <div class="field">
+        <label>Type <span class="req">*</span></label>
+        <select name="location_type" required>
+          {% for t in location_types %}<option value="{{ t }}">{{ t.replace('_',' ').title() }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Parent location</label>
+        <select name="parent_id">
+          <option value="">(none - top level)</option>
+          {% for loc in locations %}<option value="{{ loc.id }}">{{ loc.full_path }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Laboratory</label>
+        <select name="laboratory_id">
+          <option value="">(not lab-specific)</option>
+          {% for lab in laboratories %}<option value="{{ lab.id }}">{{ lab.name }} ({{ lab.code }})</option>{% endfor %}
+        </select>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary">Add Location</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Dashboard &middot; {{ settings.app_short_name }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="metric-grid">
+  <div class="metric-card"><div class="metric-label">Total Chemicals</div><div class="metric-value">{{ metrics.total_chemicals }}</div></div>
+  <div class="metric-card"><div class="metric-label">Total Containers</div><div class="metric-value">{{ metrics.total_containers }}</div></div>
+  <div class="metric-card"><div class="metric-label">Laboratories</div><div class="metric-value">{{ metrics.total_labs }}</div></div>
+  <div class="metric-card warn"><div class="metric-label">Expiring Soon</div><div class="metric-value">{{ metrics.expiring_soon }}</div></div>
+  <div class="metric-card danger"><div class="metric-label">Expired</div><div class="metric-value">{{ metrics.expired }}</div></div>
+  <div class="metric-card warn"><div class="metric-label">Low Stock</div><div class="metric-value">{{ metrics.low_stock }}</div></div>
+  <div class="metric-card danger"><div class="metric-label">Discrepancies</div><div class="metric-value">{{ metrics.discrepancies }}</div></div>
+  <div class="metric-card"><div class="metric-label">Pending Transfers</div><div class="metric-value">{{ metrics.pending_transfers }}</div></div>
+  <div class="metric-card"><div class="metric-label">Inactive Stock</div><div class="metric-value">{{ metrics.inactive_chemicals }}</div></div>
+  <div class="metric-card"><div class="metric-label">Procurement Requests</div><div class="metric-value">{{ metrics.pending_procurement }}</div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Monthly Consumption Trend (6 months)</div>
+    {{ trend_svg | safe }}
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Most Consumed Chemicals (90 days)</div>
+    {{ top_chart_svg | safe }}
+  </div>
+</div>
+
+<div class="section-title">Laboratory-wise Inventory</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Laboratory</th><th>Code</th><th>Containers</th><th>Total Quantity</th></tr></thead>
+    <tbody>
+      {% for lab in lab_inventory %}
+      <tr><td>{{ lab.name }}</td><td>{{ lab.code }}</td><td>{{ lab.container_count }}</td><td>{{ "%.2f"|format(lab.total_quantity) }}</td></tr>
+      {% else %}
+      <tr><td colspan="4"><div class="empty-state">No laboratories yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="section-title">Recent Activity</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      {% for a in metrics.recent_activity %}
+      <tr>
+        <td>{{ a.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ a.user.full_name if a.user else "System" }}</td>
+        <td><span class="pill">{{ a.action.replace('_',' ') }}</span></td>
+        <td>{{ a.description }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4"><div class="empty-state">No activity recorded yet.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
